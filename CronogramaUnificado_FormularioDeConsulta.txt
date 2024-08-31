@@ -1,0 +1,136 @@
+Public dpFrom As DateTimePicker
+
+
+Private Sub Label9_Click()
+
+End Sub
+
+Private Sub UserForm_Initialize()
+
+linhaInstrutor = Sheets("Fonte").Range("A10000").End(xlUp).Row
+CaixaDeCombinacao_Instrutor.RowSource = "Fonte!A2:A" & linhaInstrutor
+
+linhaAssistente = Sheets("Fonte").Range("B10000").End(xlUp).Row
+CaixaDeCombinacao_Assistente.RowSource = "Fonte!B2:B" & linhaAssistente
+
+CaixaDeCombinacao_Turno.RowSource = "Fonte!C2:C4"
+
+linhaSala = Sheets("Fonte").Range("G10000").End(xlUp).Row
+CaixaDeCombinacao_Sala.RowSource = "Fonte!G2:G" & linhaSala
+
+CaixaDeCombinacao_Segmento.RowSource = "Fonte!J2:J21"
+
+Set dpFrom = New DateTimePicker
+With dpFrom
+    .Add CaixaDeCombinacao_DataInicial
+    .Add CaixaDeCombinacao_DataFinal
+    .Create Me, "dd/mmm/yyyy", _
+        BackColor:=&H125FFFF, _
+        TitleBack:=&H808000, _
+        Trailing:=&H99FFFF, _
+        TitleFore:=&HFFFFFF
+End With
+
+End Sub
+
+Private Sub Botao_Consultar_Click()
+
+dataInicial = dpFrom.Value(1)
+dataFinal = dpFrom.Value(2)
+If dataFinal - dataInicial > 31 Then
+    MsgBox ("Insira datas dentro de um período máximo de um mês")
+    Exit Sub
+End If
+dataAtual = dataInicial
+periodo = dataFinal - dataInicial
+turma = CaixaTexto_Turma.Value
+If IsError(Application.Match(turma, Sheets("Base de aulas").Range("D:D"), 0)) Then
+    MsgBox ("Código de turma não encontrado")
+    Exit Sub
+End If
+turno = CaixaDeCombinacao_Turno.Value
+sala = CaixaDeCombinacao_Sala.Value
+instrutor = CaixaDeCombinacao_Instrutor.Value
+instrutorFiltro = "*" & instrutor & "*"
+assistente = CaixaDeCombinacao_Assistente.Value
+segmento = CaixaDeCombinacao_Segmento.Value
+chave = turma & turno & VBA.Format(dataAtual, "0")
+Sheets("Cronograma").Columns("K:AL").Hidden = False
+
+ultLinha = Sheets("Cronograma").Range("E" & Rows.count).End(xlUp).Row
+If ultLinha > 3 Then
+    Sheets("Cronograma").Range("E4:G" & ultLinha).Value = ""
+End If
+
+ultLinha = Sheets("Base de aulas").Range("E" & Rows.count).End(xlUp).Row
+linhaCrono = 4
+    
+For linhaBase = 2 To ultLinha
+    If Sheets("Base de aulas").Cells(linhaBase, 3) <= dataFinal And Sheets("Base de aulas").Cells(linhaBase, 3) >= dataInicial Then
+        Sheets("Cronograma").Range("E" & linhaCrono & ":G" & linhaCrono + 2).Value = Sheets("Base de aulas").Range("D" & linhaBase & ":F" & linhaBase).Value
+        linhaCrono = linhaCrono + 3
+        
+    End If
+Next
+    
+    Sheets("Cronograma").Activate
+    ultLinha = Range("E" & Rows.count).End(xlUp).Row
+    ActiveSheet.Range("$E$3:$G$" & ultLinha).RemoveDuplicates Columns:=Array(1, 2, 3), _
+        Header:=xlYes
+        
+    ultLinha = Range("E" & Rows.count).End(xlUp).Row
+    contaTurmas = Range("E4:E" & ultLinha).count
+    
+    ultLinha = contaTurmas * 3 + 3
+    
+    For i = 0 To contaTurmas - 1
+        
+        linhaAtual = contaTurmas + 3 - i
+        Range("E" & ultLinha - 2 & ":G" & ultLinha).Value = Range("E" & linhaAtual & ":G" & linhaAtual).Value
+        ultLinha = ultLinha - 3
+    
+    Next
+    
+    ultLinha = Range("E" & Rows.count).End(xlUp).Row
+    Range("B4:D6").Copy
+    Range("B7:D" & ultLinha).PasteSpecial (xlPasteFormulas)
+    Range("H4:AK6").Copy
+    Range("H7:AK" & ultLinha).PasteSpecial (xlPasteFormulas)
+    Application.CutCopyMode = False
+    Rows("4:" & ultLinha).AutoFit
+    Range("K3").Value = dataInicial
+    
+    colunaAtual = 11
+    
+    While Cells(3, colunaAtual).Value <> ""
+    
+        If Cells(3, colunaAtual).Value > dataFinal Then
+            Cells(3, colunaAtual).EntireColumn.Hidden = True
+        End If
+    
+    colunaAtual = colunaAtual + 1
+    
+    Wend
+    
+    If instrutor <> "" Then
+    Range("B3:AK3").AutoFilter field:=1, Criteria1:="=*" & instrutor & "*"
+    End If
+    If segmento <> "" Then
+    Range("B3:AK3").AutoFilter field:=2, Criteria1:=segmento
+    End If
+    If assistente <> "" Then
+    Range("B3:AK3").AutoFilter field:=3, Criteria1:=assistente
+    End If
+    If turma <> "" Then
+    Range("B3:AK3").AutoFilter field:=4, Criteria1:=turma
+    End If
+    If turno <> "" Then
+    Range("B3:AK3").AutoFilter field:=5, Criteria1:=turno
+    End If
+    If sala <> "" Then
+    Range("B3:AK3").AutoFilter field:=6, Criteria1:=sala
+    End If
+
+    Unload UserForm_Consultar
+    
+End Sub

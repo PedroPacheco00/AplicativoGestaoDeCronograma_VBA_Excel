@@ -1,0 +1,132 @@
+
+Sub mostrar_formularioDeCadastro()
+Load Userform_Cadastrar
+Userform_Cadastrar.StartUpPosition = 2
+Userform_Cadastrar.Show
+
+End Sub
+
+Sub mostrar_formularioDeConsulta()
+
+Load UserForm_Consultar
+UserForm_Consultar.StartUpPosition = 2
+UserForm_Consultar.Show
+
+End Sub
+
+Sub limparFiltro()
+
+If ActiveSheet.FilterMode = True Then
+    ActiveSheet.ShowAllData
+End If
+
+Range("L2:Q2").ClearContents
+
+End Sub
+Sub limparFiltro2()
+
+If ActiveSheet.FilterMode = True Then
+    ActiveSheet.ShowAllData
+End If
+
+Columns("K:AL").EntireColumn.Hidden = False
+
+End Sub
+
+Sub atualizarCronograma()
+    
+    Sheets("Base de aulas").Select
+    Range("d2:f2").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Selection.Copy
+    Sheets("Cronograma").Select
+    Range("E4").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    ultLinha = Range("E" & Rows.count).End(xlUp).Row
+    ActiveSheet.Range("$E$3:$G$" & ultLinha).RemoveDuplicates Columns:=Array(1, 2, 3), _
+        Header:=xlYes
+        
+    ultLinha = Range("E" & Rows.count).End(xlUp).Row
+    contaTurmas = Range("E4:E" & ultLinha).count
+    
+    ultLinha = contaTurmas * 3 + 3
+    
+    For i = 0 To contaTurmas - 1
+        
+        linhaAtual = contaTurmas + 3 - i
+        Range("E" & ultLinha - 2 & ":G" & ultLinha).Value = Range("E" & linhaAtual & ":G" & linhaAtual).Value
+        ultLinha = ultLinha - 3
+    
+    Next
+    
+    ultLinha = Range("E" & Rows.count).End(xlUp).Row
+    Range("B4:D6").Copy
+    Range("B7:D" & ultLinha).PasteSpecial (xlPasteFormulas)
+    Range("H4:AK6").Copy
+    Range("H7:AK" & ultLinha).PasteSpecial (xlPasteFormulas)
+    Application.CutCopyMode = False
+    Rows("4:" & ultLinha).AutoFit
+    Range("A1").Select
+    
+End Sub
+
+Sub atualizarMensal()
+
+    Application.EnableEvents = False
+    Sheets("Base de aulas").Select
+    Range("d2:f2").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Selection.Copy
+    Sheets("Visão mensal").Select
+    Range("E6").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    ultLinha = Range("E" & Rows.count).End(xlUp).Row
+    ActiveSheet.Range("$E$5:$G$" & ultLinha).RemoveDuplicates Columns:=Array(1, 2, 3), _
+        Header:=xlYes
+        
+    ultLinha = Range("E" & Rows.count).End(xlUp).Row
+    contaTurmas = Range("E6:E" & ultLinha).count
+    
+    ultLinha = contaTurmas * 3 + 5
+    
+    For i = 0 To contaTurmas - 1
+        
+        linhaAtual = contaTurmas + 5 - i
+        Range("E" & ultLinha - 2 & ":G" & ultLinha).Value = Range("E" & linhaAtual & ":G" & linhaAtual).Value
+       ultLinha = ultLinha - 3
+    
+    Next
+    
+    ultLinha = Range("E" & Rows.count).End(xlUp).Row
+    Range("B6:D8").Copy
+    Range("B9:D" & ultLinha).PasteSpecial (xlPasteFormulas)
+    Range("H6:AK8").Copy
+    Range("H9:AK" & ultLinha).PasteSpecial (xlPasteFormulas)
+    Application.CutCopyMode = False
+    Rows("6:" & ultLinha).AutoFit
+    Range("A1").Select
+    
+    Application.EnableEvents = True
+
+End Sub
+
+Sub filtroAvancado()
+    
+
+    Set Rng = Range("B5:AK2309")
+    
+    Rng.AdvancedFilter xlFilterInPlace, Range("L1:Q2")
+    
+    Range("A6").Select
+
+End Sub
+
+Sub percorreString()
+For i = 1 To Len(palavra)
+     MsgBox "Caratere nº " & i & ": " & Mid(palavra, i, 1)
+Next
+End Sub
+
+

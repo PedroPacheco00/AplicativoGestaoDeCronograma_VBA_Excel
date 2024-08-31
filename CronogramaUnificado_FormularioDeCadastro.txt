@@ -1,0 +1,163 @@
+Private Sub UserForm_Initialize()
+
+linhaInstrutor = Sheets("Fonte").Range("A" & Rows.count).End(xlUp).Row
+CaixaDeCombinacao_Instrutor.RowSource = "Fonte!A2:A" & linhaInstrutor
+
+linhaAssistente = Sheets("Fonte").Range("B" & Rows.count).End(xlUp).Row
+CaixaDeCombinacao_Assistente.RowSource = "Fonte!B2:B" & linhaAssistente
+
+CaixaDeCombinacao_Turno.RowSource = "Fonte!C2:C4"
+
+linhaHoras = Sheets("Fonte").Range("D" & Rows.count).End(xlUp).Row
+CaixaDeCombinacao_Horas.RowSource = "Fonte!D2:D" & linhaHoras
+
+linhaSala = Sheets("Fonte").Range("G" & Rows.count).End(xlUp).Row
+CaixaDeCombinacao_Sala.RowSource = "Fonte!G2:G" & linhaSala
+
+Set dpFrom = New DateTimePicker
+With dpFrom
+    .Add CaixaDeCombinacao_DataInicial
+    .Add CaixaDeCombinacao_DataFinal
+    .Create Me, "dd/mmm/yyyy", _
+        BackColor:=&H125FFFF, _
+        TitleBack:=&H808000, _
+        Trailing:=&H99FFFF, _
+        TitleFore:=&HFFFFFF
+End With
+
+End Sub
+
+Private Sub Botao_Sair_Click()
+Unload Userform_Cadastrar
+End Sub
+
+Private Sub Botao_Verificar_Click()
+
+dataInicial = dpFrom.Value(1)
+dataFinal = dpFrom.Value(2)
+dataAtual = dataInicial
+periodo = dataFinal - dataInicial
+turma = CaixaTexto_Turma.Value
+turno = CaixaDeCombinacao_Turno.Value
+sala = CaixaDeCombinacao_Sala.Value
+instrutor = CaixaDeCombinacao_Instrutor.Value
+informacao = CaixaTexto_Informacao.Value
+horas = CaixaDeCombinacao_Horas.Value
+assistente = CaixaDeCombinacao_Assistente.Value
+chave = turma & turno & VBA.Format(dataAtual, "0")
+contador = 0
+Sheets("Base de aulas").Activate
+linha = Range("a" & Rows.count).End(xlUp).Row
+ 
+MsgBox (chave)
+
+Dim msgResp As VbMsgBoxResult
+msgResp = MsgBox("Informações a cadastrar" & vbCrLf & vbCrLf & "Turma: " & turma & vbCrLf & "Turno: " & turno & vbCrLf & "Sala: " & sala & vbCrLf & "Instrutor: " & instrutor & vbCrLf & "Horas: " & horas & vbCrLf & "Informação: " & informacao & vbCrLf & "Período: " & dataInicial & " a " & dataFinal & vbCrLf & "Assistente: " & assistente & vbCrLf & vbCrLf & "Confirma?", vbYesNo)
+
+If msgResp = vbYes Then
+    
+    Do While dataAtual <= dataFinal
+        
+        Set ws = Sheets("Base de aulas")
+        With ws
+        Set rngFound = Range("A2:A" & linha).Find(What:=chave, LookIn:=xlValues)
+        End With
+        If Not rngFound Is Nothing Then
+            contador = 1
+        Else
+            contador = 0
+        End If
+        
+        dataAtual = dataAtual + 1
+        chave = turma & turno & VBA.Format(dataAtual, "0")
+        
+    Loop
+    
+    If contador > 0 Then
+        msgResp = MsgBox("Já existem informações dentro dos parâmetros inseridos. Deseja substituir?", vbYesNo)
+        If msgResp = vbYes Then
+            MsgBox ("Clique no botão <Cadastrar> para inserir as informações")
+            Botao_Cadastrar.Enabled = True
+        Else
+            MsgBox ("Corrija as informações e clique em verificar novamente")
+        End If
+    Else
+        MsgBox ("Clique no botão <Cadastrar> para inserir as informações")
+        Botao_Cadastrar.Enabled = True
+    End If
+    
+Else
+    MsgBox ("Corrija as informações e clique em verificar novamente")
+End If
+
+
+End Sub
+
+Private Sub Botao_Cadastrar_Click()
+
+dataInicial = dpFrom.Value(1)
+dataFinal = dpFrom.Value(2)
+dataAtual = dataInicial
+periodo = dataFinal - dataInicial
+turma = CaixaTexto_Turma.Value
+turno = CaixaDeCombinacao_Turno.Value
+sala = CaixaDeCombinacao_Sala.Value
+instrutor = CaixaDeCombinacao_Instrutor.Value
+informacao = CaixaTexto_Informacao.Value
+horas = CaixaDeCombinacao_Horas.Value
+assistente = CaixaDeCombinacao_Assistente.Value
+chave = turma & turno & VBA.Format(dataAtual, "0")
+contador = 0
+
+Sheets("Base de aulas").Activate
+linha = Range("c" & Rows.count).End(xlUp).Row + 1
+
+
+For j = 0 To periodo
+    
+    'Incluir condição para checar se dataAtual pertence aos dias do curso
+    
+    For i = 2 To linha - 1
+        
+        If Cells(i, 1).Value = chave Then
+            Cells(i, 3).Value = dataAtual
+            Cells(i, 4).Value = turma
+            Cells(i, 5).Value = turno
+            Cells(i, 6).Value = sala
+            Cells(i, 7).Value = informacao
+            Cells(i, 8).Value = instrutor
+            Cells(i, 9).Value = horas
+            Cells(i, 9).Value = assistente
+            contador = 1
+        End If
+        
+    Next
+    
+    If contador = 0 Then
+        linha = Range("c" & Rows.count).End(xlUp).Row + 1
+        Cells(linha, 3).Value = dataAtual
+        Cells(linha, 4).Value = turma
+        Cells(linha, 5).Value = turno
+        Cells(linha, 6).Value = sala
+        Cells(linha, 7).Value = informacao
+        Cells(linha, 8).Value = instrutor
+        Cells(linha, 9).Value = horas
+        Cells(linha, 10).Value = assistente
+        Range("A" & linha - 1 & ":B" & linha - 1).Copy
+        Range("A" & linha & ":B" & linha).PasteSpecial (xlPasteFormulas)
+    Else
+        contador = 0
+    End If
+    dataAtual = dataAtual + 1
+    chave = turma & turno & VBA.Format(dataAtual, "0")
+    
+Next
+
+Sheets("Página Inicial").Activate
+
+Unload Userform_Cadastrar
+
+MsgBox ("Cadastro realizado com sucesso")
+
+End Sub
+
